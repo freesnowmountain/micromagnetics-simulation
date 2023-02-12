@@ -1,63 +1,223 @@
-# import numpy as np
-# case0_input=np.load('npy_data\size_32\case_0\input_all.npy')
-# case0_label=np.load('npy_data\size_32\case_0\label_all.npy')
-# case1_input=np.load('npy_data\size_32\case_1\input_all.npy')
-# case1_label=np.load('npy_data\size_32\case_1\label_all.npy')
-# case2_input=np.load('npy_data\size_32\case_2\input_all.npy')
-# case2_label=np.load('npy_data\size_32\case_2\label_all.npy')
-# case3_input=np.load('npy_data\size_32\case_3\input_all.npy')
-# case3_label=np.load('npy_data\size_32\case_3\label_all.npy')
-
-
-# input_all= np.vstack((case0_input,case1_input,case2_input,case3_input))
-
-# label_all= np.vstack((case0_label,case1_label,case2_label,case3_label))
-
-# #打乱
-# np.random.seed(0)
-# arr = np.arange(2000) # 生成0到itern_num个数
-# np.random.shuffle(arr) # 随机打乱arr数组
-# input_all = input_all[arr] # 将input以arr索引重新组合
-# label_all = label_all[arr] # 将label以arr索引重新组合
-
-# a = np.arange(2000) # 生成0到itern_num个数
-# np.random.shuffle(a) # 随机打乱arr数组
-# input_all = input_all[a] # 将input以arr索引重新组合
-# label_all = label_all[a] # 将label以arr索引重新组合
-
-# train_in=input_all[:1600]
-# train_la=label_all[:1600]
-# te_in=input_all[1600:]
-# te_la=label_all[1600:]
-
-
-
-
-# np.save(r'D:\Download\project\npy_data\size_32\train_input.npy',train_in)
-# np.save(r'D:\Download\project\npy_data\size_32\train_label.npy',train_la)
-# np.save(r'D:\Download\project\npy_data\size_32\test_input.npy',te_in)
-# np.save(r'D:\Download\project\npy_data\size_32\test_label.npy',te_la)
+from pix2Topix import pix2pixG_32
+import argparse
+from mydatasets import CreateDatasets
+from torch.utils.data.dataloader import DataLoader
+import torch
+import torch.optim as optim
+import torch.nn as nn
+from matplotlib import pyplot as plt
+from tqdm import tqdm
 import numpy as np
+import random
+import xlwt
+import os
 from PIL import Image
 import matplotlib.pyplot as plt
-import os
+import  img
+import time
+import matplotlib
+matplotlib.use("Agg")
+#实验1：寻找一组input和output看得出明显差异有代表性的数据。
+test_input=np.load(r'D:\Download\project\output\size_32\mixcase_new\test\input.npy')
+test_label=np.load(r'D:\Download\project\output\size_32\mixcase_new\test\label.npy')
+test_output=np.load(r'D:\Download\project\output\size_32\mixcase_new\test\output.npy')
 
-#train的output
-arr=np.load('')
-head_path=''
-def vector(arr,head_path):
-    #传入四维数组，(number,img_size,img_size,3)
-    for i in range(100):
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        ax.set_aspect('equal', adjustable='box')
-        
-        X = np.arange(32) 
-        Y = np.arange(32) 
-        ax.cla()
-        ax.quiver( X, Y, arr[:,:,0,0], arr[:,:,0,1], 
-                arr[:,:,0,2], clim=[-0.5,0.5] )
-        ax.set_title('Vector graphics')
-        path=head_path+str(i)+".png"
-        fig.savefig(path)
-        # plt.pause(0.8)
+train_input=np.load(r'D:\Download\project\output\size_32\mixcase_new\train\input.npy')
+train_label=np.load(r'D:\Download\project\output\size_32\mixcase_new\train\label.npy')
+train_output=np.load(r'D:\Download\project\output\size_32\mixcase_new\train\output.npy')
+#print(test_output[20][18][16],test_label[20][18][16])#第一维<50，第二维<32,3wei<32,第四维三个数据打印出来
+#print(train_output[20][18][16],train_label[20][18][16])
+
+#print(test_output[20][18][16],test_label[20][18][16])
+#print(train_output[20][18][16],train_label[20][18][16])
+
+
+
+
+#实验2：将这个有代表性的数据的output和label的numpy数组的32*32*3数据打印出来截图。
+# np.set_printoptions(threshold=np.inf)
+# print('************************')
+# print("print test label:")
+# print(test_label)
+# print('************************')
+# print("print test_input:")
+# print(test_input)
+# print('************************')
+# print("print test_output:")
+# print(test_output)
+
+# print('************************')
+# print("print train label:")
+# print(train_label)
+# print('************************')
+# print("print train_input:")
+# print(train_input)
+# print('************************')
+# print("print train_output:")
+# print(train_output)
+# print('over')
+# #输出归一化
+# os.environ['CUBLAS_WORKSPACE_CONFIG']=':16:8'    
+# norm = torch.sqrt( torch.einsum( 'ijkl,ijkl -> ikl', 
+#                                     out, out) )
+# for l in range(3):
+#     out2[:,l,:,:] = out[:,l,:,:]/norm
+# print('************************')
+# print(test_input)
+# print('************************')
+# print(test_output)
+
+
+
+
+
+
+
+img_size=32
+#输出文件夹
+train_output_path = "output/size_"+str(img_size)+ "/mixcase_new" + '/train/'
+test_output_path = "output/size_"+str(img_size)+ "/mixcase_new" + '/test/'
+#输出最大最小
+print(test_label.min(),test_label.max())
+print(test_input.min(),test_input.max())
+print(test_output.min(),test_output.max())
+
+#彩色图
+train_input_color=train_output_path+'input_color_img/'
+train_output_color=train_output_path+'output_color_img/'
+train_label_color=train_output_path+'label_color_img/'
+
+test_input_color=test_output_path+'input_color_img/'
+test_output_color=test_output_path+'output_color_img/'
+test_label_color=test_output_path+'label_color_img/'
+
+#直方图
+train_input_zhifang=train_output_path+'input_zhifang_img/'
+train_output_zhifang=train_output_path+'output_zhifang_img/'
+train_label_zhifang=train_output_path+'label_zhifang_img/'
+
+test_input_zhifang=test_output_path+'input_zhifang_img/'
+test_output_zhifang=test_output_path+'output_zhifang_img/'
+test_label_zhifang=test_output_path+'label_zhifang_img/'
+
+#relitu
+train_reli=train_output_path+'input_reli_img/'
+test_reli=test_output_path+'input_reli_img/'
+
+
+
+#shiliangtu 
+train_input_vector=train_output_path+'input_vector_img/'
+train_output_vector=train_output_path+'output_vector_img/'
+train_label_vector=train_output_path+'label_vector_img/'
+
+test_input_vector=test_output_path+'input_vector_img/'
+test_output_vector=test_output_path+'output_vector_img/'
+test_label_vector=test_output_path+'label_vector_img/'
+
+#color
+
+# if not os.path.exists(train_input_color):
+#     os.makedirs(train_input_color)  
+# if not os.path.exists(train_label_color):
+#     os.makedirs(train_label_color)  
+# if not os.path.exists(train_output_color):
+#     os.makedirs(train_output_color) 
+
+# if not os.path.exists(test_input_color):
+#     os.makedirs(test_input_color)  
+# if not os.path.exists(test_label_color):
+#     os.makedirs(test_label_color)  
+# if not os.path.exists(test_output_color):
+#     os.makedirs(test_output_color) 
+
+# img.npy2jpg(train_input,train_input_color)
+# img.npy2jpg(train_label,train_label_color)
+# img.npy2jpg(train_output,train_output_color)
+
+# img.npy2jpg(test_input,test_input_color)
+# img.npy2jpg(test_label,test_label_color)
+# img.npy2jpg(test_output,test_output_color)
+
+#zhifangtu
+# if not os.path.exists(train_input_zhifang):
+#     os.makedirs(train_input_zhifang)  
+# if not os.path.exists(train_label_zhifang):
+#     os.makedirs(train_label_zhifang)  
+# if not os.path.exists(train_output_zhifang):
+#     os.makedirs(train_output_zhifang) 
+
+# if not os.path.exists(test_input_zhifang):
+#     os.makedirs(test_input_zhifang)  
+# if not os.path.exists(test_label_zhifang):
+#     os.makedirs(test_label_zhifang)  
+# if not os.path.exists(test_output_zhifang):
+#     os.makedirs(test_output_zhifang) 
+
+# img.plot_histogram(train_input,train_input_zhifang)
+# img.plot_histogram(train_label,train_label_zhifang)
+# img.plot_histogram(train_output,train_output_zhifang)
+
+# img.plot_histogram(test_input,test_input_zhifang)
+# img.plot_histogram(test_label,test_label_zhifang)
+# img.plot_histogram(test_output,test_output_zhifang)
+
+#矢量图
+# if not os.path.exists(train_input_vector):
+#     os.makedirs(train_input_vector)  
+# if not os.path.exists(train_label_vector):
+#     os.makedirs(train_label_vector)  
+# if not os.path.exists(train_output_vector):
+#     os.makedirs(train_output_vector) 
+
+# if not os.path.exists(test_input_vector):
+#     os.makedirs(test_input_vector)  
+# if not os.path.exists(test_label_vector):
+#     os.makedirs(test_label_vector)  
+# if not os.path.exists(test_output_vector):
+#     os.makedirs(test_output_vector) 
+
+# img.vector(train_input,train_input_vector)
+# img.vector(train_label,train_label_vector)
+# img.vector(train_output,train_output_vector)
+
+# img.vector(test_input,test_input_vector)
+# img.vector(test_label,test_label_vector)
+# img.vector(test_output,test_output_vector)
+
+# print('over')
+
+
+
+#热力图
+if not os.path.exists(train_reli):
+    os.makedirs(train_reli)  
+if not os.path.exists(train_reli):
+    os.makedirs(train_reli)  
+
+
+# img.relitu(train_output,train_label,train_reli)
+
+img.relitu(test_output,test_label,test_reli)
+print('ok')
+
+
+# te_in_p_pp=test_output_path+'output_exam_img/'
+# img.plot_histogram(test_label,te_in_p_pp)
+
+
+# test_label=np.load(r'D:\Download\project\output\size_32\mixcase_new\test\output.npy')
+# tr_in_p_p=train_output_path+'input_histogram_img/'
+# te_in_p_p=test_output_path+'input_histogram_img/'
+# img.plot_histogram(test_input,te_in_p_p)
+# img.plot_histogram(train_input,tr_in_p_p)
+
+# tr_in_p=train_output_path+'input_color_img/'
+# te_in_p=test_output_path+'input_color_img/'
+# if not os.path.exists(tr_in_p):
+#     os.makedirs(tr_in_p)  
+# if not os.path.exists(te_in_p):
+#     os.makedirs(te_in_p)  
+    
+# img.npy2jpg(train_input,tr_in_p)
+# img.npy2jpg(test_input,te_in_p)

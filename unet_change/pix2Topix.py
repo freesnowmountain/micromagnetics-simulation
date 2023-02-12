@@ -148,6 +148,7 @@ class pix2pixG_32(nn.Module):
 
     def forward(self, x):   #x(batch,3,32,32)
         # down
+
         down_1 = self.down_1(x)#(16,16,16)
         down_2 = self.down_2(down_1)#(32,8,8)
         down_3 = self.down_3(down_2)#(64,4,4)

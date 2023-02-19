@@ -15,7 +15,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import  img
 import time
-
+#xiugai
 def plot_loss(loss_g):
     fig2=plt.subplot()
     plt.plot(loss_g)
